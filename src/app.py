@@ -11,19 +11,21 @@ from admin import setup_admin
 from models import db, User
 #from models import Person
 
-app = Flask(__name__)
+app = Flask(__name__) # instanciamos la app de Flask
 app.url_map.strict_slashes = False
 
-db_url = os.getenv("DATABASE_URL")
+# Realiza una validacion de la db_url
+db_url = os.getenv("DATABASE_URL") # Extraemos de una variable de entorno (.env) la cadena de conexión
 if db_url is not None:
     app.config['SQLALCHEMY_DATABASE_URI'] = db_url.replace("postgres://", "postgresql://")
 else:
     app.config['SQLALCHEMY_DATABASE_URI'] = "sqlite:////tmp/test.db"
+# Recomendado para evitar advertencias innecesarias de SQLAlquemy
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-MIGRATE = Migrate(app, db)
-db.init_app(app)
-CORS(app)
+MIGRATE = Migrate(app, db) #inicializamos la migraciones
+db.init_app(app) # inicializamos la conexión de SQLAlquemy con la app Flask 
+CORS(app) # activa los CORS (para que pueda acceptar conexiones a través de https)
 setup_admin(app)
 
 # Handle/serialize errors like a JSON object
