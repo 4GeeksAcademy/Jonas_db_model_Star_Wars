@@ -28,18 +28,25 @@ planet_films = Table(
 
 
 class User(db.Model):
+    __tablename__ = "user"
+
     id: Mapped[int] = mapped_column(primary_key=True)
-    email: Mapped[str] = mapped_column(
-        String(120), unique=True, nullable=False)
+    email: Mapped[str] = mapped_column(String(120), unique=True, nullable=False)
     password: Mapped[str] = mapped_column(nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean(), nullable=False)
+
+    favorites = relationship("Favorite", back_populates="user", cascade="all, delete-orphan")
+
+    def __repr__(self):
+        return f"<User id={self.id}, email={self.email}>"
 
     def serialize(self):
         return {
             "id": self.id,
             "email": self.email,
-            # do not serialize the password, its a security breach
+            "favorites": [fav.serialize() for fav in self.favorites]
         }
+
 
 
 class Planet(db.Model):
@@ -161,3 +168,28 @@ class Film(db.Model):
             # Lista de IDs de planetas que aparecen en la película
             "planets": [planet.id for planet in self.planets],
         }
+    
+
+class Favorite(db.Model):
+    __tablename__ = "favorite"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("user.id"), nullable=False)
+    planet_id: Mapped[int] = mapped_column(ForeignKey("planet.id"), nullable=True)
+    people_id: Mapped[int] = mapped_column(ForeignKey("people.id"), nullable=True)
+
+    user = relationship("User", back_populates="favorites")
+    planet = relationship("Planet")
+    people = relationship("People")
+
+    def __repr__(self):
+        return f"<Favorite id={self.id}, user_id={self.user_id}, planet_id={self.planet_id}, people_id={self.people_id}>"
+
+    def serialize(self):
+        return {
+            "id": self.id,
+            "user_id": self.user_id,
+            "planet_id": self.planet_id,
+            "people_id": self.people_id,
+        }
+
